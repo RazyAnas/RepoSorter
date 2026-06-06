@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Repo Sorter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent-dim: #1f3552;
+      --accent-glow: rgba(88,166,255,0.15);
+      --green: #3fb950;
+      --muted: #8b949e;
+      --text: #e6edf3;
+      --danger: #f85149;
+      --radius: 8px;
+    }
+
+    body {
+      width: 320px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      padding: 0;
+      min-height: 380px;
+    }
+
+    /* Header */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .header-text h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+    .header-text p {
+      font-size: 10.5px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Status badge */
+    .status-bar {
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    .status-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-dot.inactive { background: var(--danger); }
+    .status-text { color: var(--muted); }
+
+    /* Main body */
+    .body { padding: 14px 16px; }
+
+    /* Section label */
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    /* Sort option cards */
+    .sort-options {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 16px;
+    }
+    .sort-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface2);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+    }
+    .sort-btn:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .sort-btn.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), inset 0 0 12px var(--accent-glow);
+    }
+    .sort-btn .btn-icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.6;
+      flex-shrink: 0;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .sort-btn.active .btn-icon { opacity: 1; }
+    .sort-btn .btn-label { flex: 1; }
+    .sort-btn .btn-hint {
+      font-size: 10px;
+      opacity: 0.5;
+      font-family: 'Space Mono', monospace;
+    }
+    .sort-btn.active .btn-hint { opacity: 0.8; }
+
+    /* Direction toggle */
+    .dir-row {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 14px;
+    }
+    .dir-btn {
+      flex: 1;
+      padding: 7px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface2);
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .dir-btn:hover { border-color: var(--muted); color: var(--text); }
+    .dir-btn.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Apply & Reset buttons */
+    .action-row {
+      display: flex;
+      gap: 6px;
+    }
+    .apply-btn {
+      flex: 1;
+      padding: 9px 14px;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      color: #0d1117;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .apply-btn:hover { opacity: 0.85; }
+    .apply-btn:active { transform: scale(0.97); }
+    .apply-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .reset-btn {
+      padding: 9px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .reset-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* Toast */
+    .toast {
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      font-size: 11.5px;
+      display: none;
+      align-items: center;
+      gap: 6px;
+    }
+    .toast.show { display: flex; }
+    .toast.ok { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+    .toast.err { background: rgba(248,81,73,0.12); color: var(--danger); border: 1px solid rgba(248,81,73,0.3); }
+
+    /* Footer */
+    .footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .footer a { color: var(--accent); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    .disabled-overlay {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px;
+      text-align: center;
+      gap: 10px;
+    }
+    .disabled-overlay.show { display: flex; }
+    .disabled-overlay svg {
+      width: 40px;
+      height: 40px;
+      stroke: var(--muted);
+      fill: none;
+      stroke-width: 1.5;
+    }
+    .disabled-overlay p { color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .disabled-overlay a {
+      color: var(--accent);
+      font-size: 11.5px;
+      text-decoration: none;
+    }
+    .disabled-overlay a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M3 6h18M7 12h10M11 18h2"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>Repo Sorter</h1>
+      <p>Sort GitHub file listings instantly</p>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <div class="status-dot" id="statusDot"></div>
+    <span class="status-text" id="statusText">Checking page…</span>
+  </div>
+
+  <!-- Active controls -->
+  <div class="body" id="mainBody">
+
+    <!-- Disabled state -->
+    <div class="disabled-overlay" id="disabledView">
+      <svg viewBox="0 0 24 24"><path d="M10 20l4-16M4 8l4 4-4 4M20 8l-4 4 4 4"/></svg>
+      <p>Navigate to a <strong>GitHub repository</strong> file listing page to use this extension.</p>
+      <a href="https://github.com" target="_blank">Open GitHub →</a>
+    </div>
+
+    <!-- Active state -->
+    <div id="activeView">
+      <div class="section-label">Sort by</div>
+      <div class="sort-options" id="sortOptions">
+        <button class="sort-btn" data-by="name">
+          <svg class="btn-icon" viewBox="0 0 24 24"><path d="M4 6h16M4 10h12M4 14h8"/></svg>
+          <span class="btn-label">Name</span>
+          <span class="btn-hint">A–Z</span>
+        </button>
+        <button class="sort-btn" data-by="date">
+          <svg class="btn-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <span class="btn-label">Date Modified</span>
+          <span class="btn-hint">commit date</span>
+        </button>
+        <button class="sort-btn" data-by="size">
+          <svg class="btn-icon" viewBox="0 0 24 24"><path d="M21 15V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          <span class="btn-label">File Size</span>
+          <span class="btn-hint">bytes</span>
+        </button>
+        <button class="sort-btn" data-by="type">
+          <svg class="btn-icon" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+          <span class="btn-label">File Type</span>
+          <span class="btn-hint">extension</span>
+        </button>
+        <button class="sort-btn" data-by="message">
+          <svg class="btn-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span class="btn-label">Commit Message</span>
+          <span class="btn-hint">alphabetical</span>
+        </button>
+      </div>
+
+      <div class="section-label">Direction</div>
+      <div class="dir-row">
+        <button class="dir-btn active" id="dirAsc" data-dir="asc">↑ Ascending</button>
+        <button class="dir-btn" id="dirDesc" data-dir="desc">↓ Descending</button>
+      </div>
+
+      <div class="action-row">
+        <button class="apply-btn" id="applyBtn" disabled>Apply Sort</button>
+        <button class="reset-btn" id="resetBtn">↺ Reset</button>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    Works on any GitHub repo file page &nbsp;·&nbsp; <a href="https://github.com" target="_blank">github.com</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
