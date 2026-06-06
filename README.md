@@ -1,3 +1,5 @@
+![Uploading ChatGPT Image Jun 6, 2026, 02_22_50 PM.png…]()
+
 # 🛠 How to install (unpacked, for dev use)
 
 - Unzip github-repo-sorter.zip
