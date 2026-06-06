@@ -1,4 +1,6 @@
-![Uploading ChatGPT Image Jun 6, 2026, 02_22_50 PM.png…]()
+<p align="center">
+  <img src="banner.png" alt="Repository Sorter Banner" width="100%">
+</p>
 
 # 🛠 How to install (unpacked, for dev use)
 
